@@ -13,6 +13,8 @@ setuptools.setup(
     author='Dave Shawley',
     author_email='daveshawley@gmail.com',
     packages=['contacts'],
+    entry_points={'console_scripts': ['contacts-api = contacts.app:main']},
+    install_requires=['sprockets.http==1.5.0'],
     classifiers=[
         'Development Status :: 1 - Planning',
         'License :: OSI Approved :: BSD License',

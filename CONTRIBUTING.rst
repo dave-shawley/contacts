@@ -14,9 +14,9 @@ the root of the directory::
 
    $ python3 -mvenv env
 
-Next, install the development requirements::
+Next, install the package::
 
-   $ env/bin/pip install tornado
+   $ env/bin/pip install -e .
 
 Finally, run the tests to make sure that your environment is set up correctly.
 The tests in master should always pass::
