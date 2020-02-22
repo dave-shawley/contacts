@@ -12,7 +12,7 @@ class Application(sprockets.http.app.Application):
         super(Application, self).__init__(handlers, *args, **kwargs)
 
 
-def main():
+def entry_point():
     sprockets.http.run(
         Application,
         log_config={
