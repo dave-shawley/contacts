@@ -13,4 +13,27 @@ class Application(sprockets.http.app.Application):
 
 
 def main():
-    sprockets.http.run(Application)
+    sprockets.http.run(
+        Application,
+        log_config={
+            'version': 1,
+            'formatters': {
+                'console': {
+                    'datefmt': '%Y-%m-%dT%H:%M:%S',
+                    'format': (
+                        '%(asctime)s.%(msecs)03d %(levelname)10s - %(name)s: '
+                        '%(message)s [pid=%(process)d]'),
+                }
+            },
+            'handlers': {
+                'console': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'console',
+                    'stream': 'ext://sys.stdout',
+                }
+            },
+            'root': {
+                'handlers': ['console'],
+                'level': 'INFO',
+            }
+        })
