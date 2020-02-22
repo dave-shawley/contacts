@@ -1,3 +1,4 @@
 include CONTRIBUTING.rst
+graft docs
 graft tests
 global-exclude *.pyc
