@@ -1,15 +1,32 @@
 from tornado import web
 import sprockets.http.app
+from sprockets.mixins.mediatype import content, transcoders
 
 import contacts.handlers
+import contacts.db
 
 
 class Application(sprockets.http.app.Application):
+    database: contacts.db.Database
+
     def __init__(self, *args, **kwargs):
         handlers = [
+            web.url('/contacts',
+                    contacts.handlers.ContactHandler,
+                    name='contacts-root'),
+            web.url('/contacts/(?P<contact_id>.*)',
+                    contacts.handlers.ContactHandler,
+                    name='contact-handler'),
             web.url('/status', contacts.handlers.StatusHandler),
         ]
         super(Application, self).__init__(handlers, *args, **kwargs)
+
+        content.install(self,
+                        default_content_type='application/json',
+                        encoding='utf-8')
+        content.add_transcoder(self, transcoders.JSONTranscoder())
+
+        self.database = contacts.db.Database()
 
 
 def entry_point():
