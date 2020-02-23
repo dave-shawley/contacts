@@ -24,6 +24,9 @@ then
 		printf '.'
 	done
 	echo ' done.'
+
+	docker-compose exec database createdb -U postgres contacts
+	docker-compose exec -T database psql -U postgres -d contacts <schema.sql
 fi
 
 test -d build || mkdir build
