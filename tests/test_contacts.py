@@ -1,5 +1,5 @@
 import json
-import typing
+import uuid
 
 from sprockets.http import testing
 from tornado import httpclient
@@ -64,3 +64,28 @@ class ContactCreationTests(testing.SprocketsHttpTestCase):
                                   'email': 'me@example.com'
                               })
         self.assertEqual(422, response.code)
+        self.assertEqual('application/problem+json',
+                         response.headers['Content-Type'])
+        body = json.loads(response.body.decode('utf-8'))
+        self.assertEqual('Body is missing required parameters', body['title'])
+        self.assertEqual('name is required', body['detail'])
+
+
+class ContactRetrievalTests(testing.SprocketsHttpTestCase):
+    def get_app(self):
+        self.app = app.Application()
+        return self.app
+
+    def test_that_random_id_returns_not_found(self):
+        contact_id = str(uuid.uuid4())
+        response = self.fetch(f'/contacts/{contact_id}')
+        self.assertEqual(404, response.code)
+        self.assertEqual('application/problem+json',
+                         response.headers['Content-Type'])
+        body = json.loads(response.body.decode('utf-8'))
+        self.assertEqual('Contact does not exist', body['title'])
+        self.assertEqual(f'/contacts/{contact_id}', body['instance'])
+
+    def test_that_non_uuid_id_returns_not_found(self):
+        response = self.fetch('/contacts/12345')
+        self.assertEqual(404, response.code)

@@ -32,4 +32,4 @@ class Database:
 
     async def get_contact_by_id(
             self, contact_id: uuid.UUID) -> typing.Union[Contact, None]:
-        return contacts[contact_id]
+        return contacts.get(contact_id, None)

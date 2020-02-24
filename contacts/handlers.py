@@ -2,8 +2,9 @@ import dataclasses
 import json
 import uuid
 
-from tornado import web
+import problemdetails
 from sprockets.mixins.mediatype import content
+from tornado import web
 
 import contacts.app
 
@@ -18,12 +19,21 @@ class StatusHandler(web.RequestHandler):
             }).encode('utf-8'))
 
 
-class ContactHandler(content.ContentMixin, web.RequestHandler):
+class ContactHandler(problemdetails.ErrorWriter, content.ContentMixin,
+                     web.RequestHandler):
     application: 'contacts.app.Application'
 
     async def get(self, contact_id):
-        contact = await self.application.database.get_contact_by_id(
-            uuid.UUID(contact_id))
+        try:
+            contact_id = uuid.UUID(contact_id)
+        except ValueError:
+            contact_id = uuid.UUID(int=0)
+
+        contact = await self.application.database.get_contact_by_id(contact_id)
+        if contact is None:
+            raise problemdetails.Problem(status_code=404,
+                                         title='Contact does not exist',
+                                         instance=self.request.path)
         self.set_status(200)
         self.send_response(dataclasses.asdict(contact))
 
@@ -34,9 +44,12 @@ class ContactHandler(content.ContentMixin, web.RequestHandler):
             display = body.get('display', None)
             email = body.get('email', None)
             company = body.get('company', None)
-        except KeyError:
+        except KeyError as error:
             self.set_status(422)
-            return
+            raise problemdetails.Problem(
+                status_code=422,
+                title='Body is missing required parameters',
+                detail=f'{error.args[0]} is required')
 
         contact = await self.application.database.create_contact(
             name, display, email, company)
