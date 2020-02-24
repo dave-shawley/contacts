@@ -41,3 +41,26 @@ class ContactCreationTests(testing.SprocketsHttpTestCase):
         self.assertEqual('john doe', body['display'])
         self.assertListEqual(['john', 'doe'], body['name'])
         self.assertIsNone(body['primary_email'])
+
+    def test_that_unhandled_content_type_results_in_415(self):
+        response = self.fetch('/contacts',
+                              method='POST',
+                              body='<?xml version="1.0"?><contact/>',
+                              headers={'Content-Type': 'application/xml'})
+        self.assertEqual(415, response.code)
+
+    def test_that_unparseable_json_results_in_400(self):
+        response = self.fetch('/contacts',
+                              method='POST',
+                              body='{]',
+                              headers={'Content-Type': 'application/json'})
+        self.assertEqual(400, response.code)
+
+    def test_that_missing_name_results_in_422(self):
+        response = self.fetch('/contacts',
+                              method='POST',
+                              json={
+                                  'display': 'whatever',
+                                  'email': 'me@example.com'
+                              })
+        self.assertEqual(422, response.code)

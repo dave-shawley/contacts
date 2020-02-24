@@ -29,9 +29,17 @@ class ContactHandler(content.ContentMixin, web.RequestHandler):
 
     async def post(self):
         body = self.get_request_body()
+        try:
+            name = body['name']
+            display = body.get('display', None)
+            email = body.get('email', None)
+            company = body.get('company', None)
+        except KeyError:
+            self.set_status(422)
+            return
+
         contact = await self.application.database.create_contact(
-            body['name'], body.get('display', None), body.get('email', None),
-            body.get('company', None))
+            name, display, email, company)
         self.set_header(
             'Location',
             self.reverse_url('contact-handler', str(contact.contact_id)))
