@@ -9,8 +9,18 @@ from tornado import web
 import contacts.app
 
 
-class StatusHandler(web.RequestHandler):
+class ApplicationAvailabilityMixin(web.RequestHandler):
+    application: 'contacts.app.Application'
+
+    def prepare(self):
+        if not self.application.ready_to_serve.is_set():
+            self.set_status(503)
+            self.finish()
+
+
+class StatusHandler(ApplicationAvailabilityMixin, web.RequestHandler):
     def get(self):
+        self.set_status(200)
         self.set_header('Content-Type', 'application/json')
         self.write(
             json.dumps({
@@ -19,10 +29,8 @@ class StatusHandler(web.RequestHandler):
             }).encode('utf-8'))
 
 
-class ContactHandler(problemdetails.ErrorWriter, content.ContentMixin,
-                     web.RequestHandler):
-    application: 'contacts.app.Application'
-
+class ContactHandler(ApplicationAvailabilityMixin, problemdetails.ErrorWriter,
+                     content.ContentMixin, web.RequestHandler):
     async def get(self, contact_id):
         try:
             contact_id = uuid.UUID(contact_id)

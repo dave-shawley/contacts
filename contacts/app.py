@@ -1,3 +1,5 @@
+import asyncio
+
 from tornado import web
 import sprockets.http.app
 from sprockets.mixins.mediatype import content, transcoders
@@ -27,6 +29,8 @@ class Application(sprockets.http.app.Application):
         content.add_transcoder(self, transcoders.JSONTranscoder())
 
         self.database = contacts.db.Database()
+        self.ready_to_serve = asyncio.Event()
+        self.ready_to_serve.set()
 
 
 def entry_point():

@@ -70,6 +70,16 @@ class ContactCreationTests(testing.SprocketsHttpTestCase):
         self.assertEqual('Body is missing required parameters', body['title'])
         self.assertEqual('name is required', body['detail'])
 
+    def test_that_endpoint_503s_when_not_ready_to_serve(self):
+        self.app.ready_to_serve.clear()
+        response = self.fetch('/contacts',
+                              method='POST',
+                              json={
+                                  'name': [],
+                                  'email': 'me@example.com',
+                              })
+        self.assertEqual(response.code, 503)
+
 
 class ContactRetrievalTests(testing.SprocketsHttpTestCase):
     def get_app(self):
@@ -89,3 +99,8 @@ class ContactRetrievalTests(testing.SprocketsHttpTestCase):
     def test_that_non_uuid_id_returns_not_found(self):
         response = self.fetch('/contacts/12345')
         self.assertEqual(404, response.code)
+
+    def test_that_endpoint_503s_when_not_ready_to_serve(self):
+        self.app.ready_to_serve.clear()
+        response = self.fetch('/contacts/12345')
+        self.assertEqual(response.code, 503)
