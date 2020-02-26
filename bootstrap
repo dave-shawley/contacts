@@ -1,0 +1,35 @@
+#!/bin/sh -e
+#
+# bootstrap -- prepare local development environment.
+#
+# Run this script to run test dependencies in the local docker environment.
+#
+# vim: set ts=8 sw=8 sts=8 noet:
+test -n "$SHELLDEBUG" && set -x
+
+get_port() {
+	docker-compose port $1 $2 | cut -d: -f2
+}
+
+if test "$1" != 'shellinit'
+then
+	docker-compose down --remove-orphans --volumes
+	docker-compose up -d database
+
+	printf 'Waiting on database...'
+	while
+		! docker-compose exec database psql -Upostgres -c 'SELECT 1'>/dev/null 2>&1
+	do
+		sleep 1
+		printf '.'
+	done
+	echo ' done.'
+
+	docker-compose exec database createdb -U postgres contacts
+	docker-compose exec -T database psql -U postgres -d contacts <schema.sql
+fi
+
+test -d build || mkdir build
+cat>build/test-environment<<EOF
+DATABASE_URL=postgresql://postgres:my-secret@127.0.0.1:$(get_port database 5432)/postgres
+EOF
