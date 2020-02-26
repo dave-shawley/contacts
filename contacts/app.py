@@ -29,11 +29,16 @@ class Application(sprockets.http.app.Application):
                         encoding='utf-8')
         content.add_transcoder(self, transcoders.JSONTranscoder())
 
-        self.database = contacts.db.Database(os.environ['DATABASE_URL'])
-        self.ready_to_serve = asyncio.Event()
-        self.ready_to_serve.set()
+        self.database = None
+        self.ready_to_serve = None
 
+        self.before_run_callbacks.append(self.on_start)
         self.on_shutdown_callbacks.append(self.on_shutdown)
+
+    def on_start(self, _ignored_app, _ignored_loop):
+        self.ready_to_serve = asyncio.Event()
+        self.database = contacts.db.Database(os.environ['DATABASE_URL'])
+        self.ready_to_serve.set()
 
     async def on_shutdown(self, _ignored):
         await self.database.close()
