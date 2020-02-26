@@ -1,7 +1,11 @@
+import contextlib
 import logging
 import os
 import pathlib
 import sys
+
+import psycopg2.extras
+import psycopg2.extensions
 
 
 def setup_package():
@@ -21,3 +25,14 @@ def setup_package():
         name = name.upper()
         logger.debug('setting environment variable %s=%s', name, value)
         os.environ[name] = value
+
+    logger.info('configuring psycopg2')
+    psycopg2.extras.register_uuid()
+
+    logger.info('cleaning database')
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    with contextlib.closing(conn):
+        with conn.cursor() as cursor:
+            cursor.execute('DELETE FROM public.contacts')
+            cursor.execute('DELETE FROM public.identifiers')
+            cursor.execute('DELETE FROM public.street_addresses')
